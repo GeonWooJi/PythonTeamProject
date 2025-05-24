@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>회원가입</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/brython@3.9.5/brython.min.js"></script>
+    <style>
+        html, body {
+            margin: 0;
+            padding: 0;
+            font-family: sans-serif;
+            background-color: #f2f2f2;
+        }
+
+        /* HEADER */
+        .header {
+            background-color: #ffffff;
+            height: 50px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 16px;
+            box-shadow: 0 1px 4px rgba(0,0,0,0.1);
+            position: fixed;
+            top: 0;
+            width: 100%;
+            z-index: 10;
+        }
+
+        .menu-button {
+            width: 24px;
+            height: 18px;
+            cursor: pointer;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        .menu-button div {
+            background-color: #333;
+            height: 3px;
+            border-radius: 2px;
+        }
+
+        .menu {
+            background-color: white;
+            width: 100%;
+            position: fixed;
+            top: 50px;
+            left: 0;
+            z-index: 9;
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+        }
+
+        .menu.show {
+            max-height: 300px;
+        }
+
+        .menu-item {
+            padding: 16px;
+            border-bottom: 1px solid #ddd;
+            text-decoration: none;
+            color: black;
+            display: block;
+        }
+
+        .header-title {
+            position: absolute;
+            left: 50%;
+            transform: translateX(-50%);
+            font-weight: bold;
+            font-size: 14px;
+        }
+
+        .header-title a {
+            text-decoration: none;
+            color: #000;
+        }
+
+        .container {
+            max-width: 480px;
+            margin: 50px auto 0 auto;  /* header 높이 고려 */
+            padding: 20px;
+            background-color: white;
+            min-height: calc(100vh - 50px);
+            box-sizing: border-box;
+        }
+
+        h2 {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        label {
+            display: block;
+            margin-top: 16px;
+            font-weight: bold;
+        }
+
+        input[type="text"],
+        input[type="url"] {
+            width: 100%;
+            padding: 10px;
+            margin-top: 6px;
+            border-radius: 6px;
+            border: 1px solid #ccc;
+            box-sizing: border-box;
+        }
+
+        button {
+            margin-top: 24px;
+            width: 100%;
+            padding: 12px;
+            background-color: #555;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 16px;
+        }
+
+        button:hover {
+            background-color: #333;
+        }
+    </style>
+</head>
+<body onload="brython()">
+
+    <!-- HEADER -->
+    <div class="header">
+        <div class="menu-button" id="hamburger">
+            <div></div>
+            <div></div>
+            <div></div>
+        </div>
+        <div class="header-title">
+            <a href="index.html">성격기반 랜덤여행</a>
+        </div>
+    </div>
+
+    <!-- DROPDOWN MENU -->
+    <div class="menu" id="menu">
+        <a href="signup.html" class="menu-item">회원가입</a>
+        <a href="login.html" class="menu-item">로그인</a>
+        <div class="menu-item">빈 메뉴</div>
+        <div class="menu-item">빈 메뉴</div>
+    </div>
+
+    <!-- FORM -->
+    <div class="container">
+        <h2>회원가입</h2>
+        <form>
+            <label for="student-id">학번</label>
+            <input type="text" id="student-id" name="student-id" required>
+
+            <label for="name">이름</label>
+            <input type="text" id="name" name="name" required>
+
+            <label for="major">학과</label>
+            <input type="text" id="major" name="major" required>
+
+            <label for="kakao">1대1 카카오톡 오픈 프로필 주소</label>
+            <input type="url" id="kakao" name="kakao" placeholder="https://open.kakao.com/..." required>
+
+            <button type="submit">가입하기</button>
+        </form>
+    </div>
+    <script type="text/python">
+        from browser import document
+
+        def toggle_menu(event):
+            menu = document["menu"]
+            menu.classList.toggle("show")
+
+        document["hamburger"].bind("click", toggle_menu)
+    </script>
+</body>
+</html>
