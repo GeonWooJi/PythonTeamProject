@@ -115,13 +115,6 @@
             border-radius: 3px;
         }
 
-        .btn {
-            background-color: #888890;
-            height: 36px;
-            border-radius: 6px;
-            margin-top: 10px;
-        }
-
         .scroll-container::-webkit-scrollbar {
             display: none;
         }
@@ -129,6 +122,37 @@
         .scroll-container {
             -ms-overflow-style: none;
             scrollbar-width: none;
+        }
+
+        .btn {
+            width: 100%;
+            max-width: 480px;
+            margin: 10px auto;
+            padding: 12px 20px;
+            border: none;
+            border-radius: 8px;
+            color: white;
+            font-size: 16px;
+            text-align: center;
+            display: block;
+            cursor: pointer;
+            transition: background-color 0.2s ease;
+        }
+
+        .btn-blue {
+            background-color: #007bff;
+        }
+
+        .btn-blue:hover {
+            background-color: #0056b3;
+        }
+
+        .btn-green {
+            background-color: #28a745;
+        }
+
+        .btn-green:hover {
+            background-color: #1e7e34;
         }
     </style>
 </head>
@@ -180,19 +204,39 @@
             <div class="box"></div>
         </div>
 
-        <div class="btn"></div>
-        <div class="btn"></div>
+    <button class="btn btn-blue" id="match-team-btn">내 성격과 유사한 팀 찾기</button>
+    <button class="btn btn-green">새로운 팀 만들기</button>
     </div>
 
     <!-- BRYTHON SCRIPT -->
     <script type="text/python">
-        from browser import document
+        from browser import document, window
 
         def toggle_menu(event):
             menu = document["menu"]
             menu.classList.toggle("show")
 
         document["hamburger"].bind("click", toggle_menu)
+
+        def go_to_team_match(e):
+            # 세션에서 사용자 로그인 여부 및 성격테스트 여부 확인
+            session = window.sessionStorage
+
+            student_id = session["student_id"] if "student_id" in session else None
+            name = session.get("name") if "name" in session else None
+            personality = session.get("personality") if "personality" in session else None  # 성격 유형 데이터 저장 여부
+
+            if not student_id or not name:
+                # 로그인 안된 경우
+                window.location.href = "login.html"
+            elif not personality:
+                # 성격 테스트를 안 한 경우
+                window.location.href = "personality_test.html"
+            else:
+                # 테스트 완료 → 팀 매칭 리스트 페이지로
+                window.location.href = "team_match.html"
+
+        document["match-team-btn"].bind("click", go_to_team_match)
     </script>
 
 </body>
