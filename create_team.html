@@ -101,29 +101,130 @@
             font-weight: bold;
         }
 
-        input[type="text"],
-        input[type="url"] {
+        label {
+            font-weight: bold;
+            margin-top: 16px;
+            display: block;
+        }
+
+        input[type="text"], input[type="url"] {
             width: 100%;
             padding: 10px;
             margin-top: 6px;
+            margin-bottom: 10px;
             border-radius: 6px;
             border: 1px solid #ccc;
             box-sizing: border-box;
         }
 
         button {
-            margin-top: 24px;
-            width: 100%;
-            padding: 12px;
-            background-color: #555;
-            color: white;
+            padding: 10px 16px;
             border: none;
             border-radius: 6px;
-            font-size: 16px;
+            background-color: #007bff;
+            color: white;
+            cursor: pointer;
         }
 
         button:hover {
-            background-color: #333;
+            background-color: #0056b3;
+        }
+
+        .img-preview {
+            margin-top: 10px;
+            text-align: center;
+        }
+
+        .img-preview img {
+            max-width: 100%;
+            max-height: 200px;
+            border-radius: 10px;
+        }
+
+        .tag-section {
+            margin-top: 20px;
+        }
+
+        .tag-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .tag-item {
+            background-color: #ddd;
+            padding: 6px 10px;
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+        }
+
+        .tag-item span {
+            margin-right: 6px;
+        }
+
+        .tag-item button {
+            background: #dc3545;
+            border: none;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            color: white;
+            font-weight: bold;
+            padding: 0;
+            line-height: 20px;
+            cursor: pointer;
+        }
+
+        .tag-section div {
+            display: flex;
+            gap: 8px;
+            align-items: center;  /* ✅ 버튼과 input 수직 가운데 정렬 */
+        }
+
+        /* + 버튼 스타일 수정 */
+        #add-tag {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 0 12px;               /* 좌우 패딩만 적용 */
+            height: 37.5px;                  /* ✅ input 높이에 맞춤 */
+            font-size: 20px;
+            line-height: 1;
+            border-radius: 6px;
+            cursor: pointer;
+        }
+
+        .btn {
+            width: 100%;
+            max-width: 480px;
+            margin: 10px auto;
+            padding: 12px 20px;
+            border: none;
+            border-radius: 8px;
+            color: white;
+            font-size: 16px;
+            text-align: center;
+            display: block;
+            cursor: pointer;
+            transition: background-color 0.2s ease;
+        }
+
+        .btn-blue {
+            background-color: #007bff;
+        }
+
+        .btn-blue:hover {
+            background-color: #0056b3;
+        }
+
+        .btn-green {
+            background-color: #28a745;
+        }
+
+        .btn-green:hover {
+            background-color: #1e7e34;
         }
     </style>
 </head>
@@ -149,16 +250,63 @@
 
     <!-- FORM -->
     <div class="container">
+        <h2>새로운 팀 만들기</h2>
 
+        <label for="team-name">팀 이름</label>
+        <input type="text" id="team-name" placeholder="예: 자유로운 여행가들">
+
+        <label for="image-url">여행지 예시 이미지 URL</label>
+        <input type="url" id="image-url" placeholder="https://example.com/image.jpg">
+        <div class="img-preview" id="image-preview"></div>
+
+        <div class="tag-section">
+            <label for="tag-input">선호 팀원 태그</label>
+            <div style="display: flex; gap: 8px;">
+            <input type="text" id="tag-input" placeholder="예: 차분한, 활동적" style="flex: 1;">
+            <button type="button" id="add-tag">+</button>
+            </div>
+            <div class="tag-list" id="tag-list"></div>
+        </div>
+
+        
+        <button class="btn btn-green" id="create-team-btn">팀 만들기</button>
     </div>
+
     <script type="text/python">
-        from browser import document
+        from browser import document, html
 
         def toggle_menu(event):
             menu = document["menu"]
             menu.classList.toggle("show")
 
         document["hamburger"].bind("click", toggle_menu)
+
+        def update_image_preview(ev):
+            url = document["image-url"].value.strip()
+            preview = document["image-preview"]
+            preview.clear()
+            if url:
+                preview <= html.IMG(src=url)
+
+        def add_tag(ev):
+            tag_input = document["tag-input"]
+            tag = tag_input.value.strip()
+            if tag:
+                tag_list = document["tag-list"]
+                tag_item = html.DIV(Class="tag-item")
+                tag_item <= html.SPAN(tag)
+                remove_btn = html.BUTTON("-")
+                
+                def remove_tag(e):
+                    tag_item.remove()
+                remove_btn.bind("click", remove_tag)
+                
+                tag_item <= remove_btn
+                tag_list <= tag_item
+                tag_input.value = ""
+
+        document["image-url"].bind("input", update_image_preview)
+        document["add-tag"].bind("click", add_tag)
     </script>
 </body>
 </html>
