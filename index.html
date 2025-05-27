@@ -171,8 +171,6 @@
     <div class="menu" id="menu">
         <a href="signup.html" class="menu-item">회원가입</a>
         <a href="login.html" class="menu-item">로그인</a>
-        <div class="menu-item">빈 메뉴</div>
-        <div class="menu-item">빈 메뉴</div>
     </div>
 
 
@@ -205,7 +203,7 @@
         </div>
 
     <button class="btn btn-blue" id="match-team-btn">내 성격과 유사한 팀 찾기</button>
-    <button class="btn btn-green">새로운 팀 만들기</button>
+    <button class="btn btn-green" id="create-team-btn">새로운 팀 만들기</button>
     </div>
 
     <!-- BRYTHON SCRIPT -->
@@ -218,25 +216,27 @@
 
         document["hamburger"].bind("click", toggle_menu)
 
-        def go_to_team_match(e):
-            # 세션에서 사용자 로그인 여부 및 성격테스트 여부 확인
+        def check_and_redirect(target_page):
             session = window.sessionStorage
-
             student_id = session["student_id"] if "student_id" in session else None
-            name = session.get("name") if "name" in session else None
-            personality = session.get("personality") if "personality" in session else None  # 성격 유형 데이터 저장 여부
+            name = session["name"] if "name" in session else None
+            personality = session["personality"] if "personality" in session else None
 
             if not student_id or not name:
-                # 로그인 안된 경우
                 window.location.href = "login.html"
             elif not personality:
-                # 성격 테스트를 안 한 경우
                 window.location.href = "personality_test.html"
             else:
-                # 테스트 완료 → 팀 매칭 리스트 페이지로
-                window.location.href = "team_match.html"
+                window.location.href = target_page
+
+        def go_to_team_match(event):
+            check_and_redirect("team_match.html")
+
+        def go_to_create_team(event):
+            check_and_redirect("create_team.html")
 
         document["match-team-btn"].bind("click", go_to_team_match)
+        document["create-team-btn"].bind("click", go_to_create_team)
     </script>
 
 </body>
