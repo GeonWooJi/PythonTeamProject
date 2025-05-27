@@ -1,9 +1,9 @@
-name: Deploy to S3
+name: Upload HTML to S3
 
 on:
   push:
     branches:
-      - main  # main 브랜치에 푸시될 때 동작
+      - main  # 또는 원하는 브랜치
 
 jobs:
   deploy:
@@ -20,6 +20,6 @@ jobs:
         aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
         aws-region: ${{ secrets.AWS_REGION }}
 
-    - name: Sync to S3
+    - name: Upload root HTML files to S3
       run: |
-        aws s3 sync ./dist s3://python-team-project --delete
+        aws s3 sync . s3://python-team-project --exclude ".git/*" --exclude ".github/*" --exclude "README.md" --delete
