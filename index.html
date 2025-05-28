@@ -188,11 +188,10 @@
         </div>
 
         <h2>이런 파티원들도 있어요 !</h2>
-        <div class="scroll-container">
-            <div class="box"></div>
-            <div class="box"></div>
-            <div class="box"></div>
+        <div class="scroll-container" id="party-container">
+            <!-- .box 요소는 브라이썬이 생성할 것 -->
         </div>
+
 
         <h2>이런 여행지는 어때요?</h2>
         <div class="scroll-container">
@@ -209,7 +208,56 @@
     <script type="text/python">
         from browser import document, window, html
         import json
+        import random
 
+        # 이미지 리스트
+        bg_images = [
+            "https://d2ur3228349jyd.cloudfront.net/assets/img/characters/mv/pochacco.png",
+            "https://lh3.googleusercontent.com/proxy/PVBaqkQu38nQN4hfkMWGaimbqQtNlfITnSe6FHTFb96ixQT7a_F0-PnAdA4L0eHSmYlu_YiunJxCC8DEy12HgjvVPkrEt5J15uhh1EcURWaSfy_MY0BY0p6Ie-Pf",
+            "https://lh3.googleusercontent.com/proxy/J4Ly4jjnTzGj24-vIxym4l729OwQd0jDR66DP4Jh_Qquju70-B5N24Zebl9_TuVuTy9ZJYKkM0Tvtow7Q7jexSuEcJFGFmf8vcYxxvumMov4jhGAkVFJfpDv6NdP"
+        ]
+
+        def get_user_info_array():
+            cookies = document.cookie
+            for cookie in cookies.split(";"):
+                if cookie.strip().startswith("user-info="):
+                    try:
+                        return json.loads(cookie.split("=", 1)[1])
+                    except:
+                        return []
+            return []
+
+        def render_party_boxes():
+            container = document["party-container"]
+            container.clear()
+            users = get_user_info_array()
+
+            for user in users:
+                student_num = user.get("studentNumber", "")
+                mbti = user.get("mbti", "")
+                year = student_num[2:4] if len(student_num) >= 5 else "??"
+                label = f"{year}학번 {mbti}" if mbti and mbti != "null" else f"{year}학번 미지의 여행자"
+
+                box = html.DIV(Class="box")
+                box.style.backgroundImage = f"url('{random.choice(bg_images)}')"
+                box.style.backgroundSize = "cover"
+                box.style.position = "relative"
+
+                # 텍스트 표시 (오른쪽 하단)
+                text = html.DIV(label)
+                text.style.position = "absolute"
+                text.style.bottom = "5px"
+                text.style.right = "5px"
+                text.style.backgroundColor = "rgba(0, 0, 0, 0.6)"
+                text.style.color = "white"
+                text.style.fontSize = "12px"
+                text.style.padding = "2px 6px"
+                text.style.borderRadius = "8px"
+
+                box <= text
+                container <= box
+
+        render_party_boxes()
         def setup_menu():
             menu = document["menu"]
             menu.clear()
