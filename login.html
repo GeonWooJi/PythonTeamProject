@@ -4,12 +4,13 @@
     <meta charset="UTF-8">
     <title>로그인</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/brython@3.9.5/brython.min.js"></script>
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/brython@3.11.0/brython.min.js"></script>
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/brython@3.11.0/brython_stdlib.js"></script>
     <style>
         html, body {
             margin: 0;
             padding: 0;
-            font-family: sans-serif;
+            font-family: sans-serif;    
             background-color: #f2f2f2;
         }
 
@@ -156,8 +157,7 @@
 
     <!-- DROPDOWN MENU -->
     <div class="menu" id="menu">
-        <a href="signup.html" class="menu-item">회원가입</a>
-        <a href="login.html" class="menu-item">로그인</a>
+        <!-- 여기에 Brython이 동적으로 삽입할 내용이 들어감 -->
     </div>
 
     <!-- 로그인 폼 -->
@@ -183,7 +183,42 @@
 
     <!-- Brython 코드 -->
     <script type="text/python">
-        from browser import document, html
+        from browser import document, alert, timer, window, html
+        import json
+
+        def setup_menu():
+            menu = document["menu"]
+            menu.clear()
+
+            user_info_str = window.sessionStorage.getItem("userInfo")
+
+            if user_info_str is None:
+                # 로그인 안 된 경우
+                menu <= html.A("회원가입", href="signup.html", Class="menu-item")
+                menu <= html.A("로그인", href="login.html", Class="menu-item")
+            else:
+                try:
+                    user_info = json.loads(user_info_str)
+                    name = user_info.get("name", "회원")
+                    # 인사말 (텍스트만, 클릭 안 됨)
+                    greet = html.SPAN(f"{name}님 반가워요", Class="menu-item")
+                    greet.style.cursor = "default"
+                    greet.style.marginRight = "10px"
+                    menu <= greet
+
+                    # 로그아웃 버튼
+                    logout = html.A("로그아웃", href="#", Class="menu-item")
+                    logout.bind("click", on_logout)
+                    menu <= logout
+                except:
+                    # 파싱 실패 시 강제 로그아웃
+                    on_logout(None)
+
+        def on_logout(ev):
+            window.sessionStorage.removeItem("userInfo")
+            window.location.href = "index.html"  # 메인 페이지로 이동
+
+        setup_menu()
 
         def toggle_menu(event):
             menu = document["menu"]
@@ -191,18 +226,42 @@
 
         document["hamburger"].bind("click", toggle_menu)
 
-        def on_login_click(event):
-            student_id = document["student-id"].value.strip()
-            name = document["name"].value.strip()
-            message = document["login-message"]
+        def get_user_info_array():
+            cookies = document.cookie
+            for cookie in cookies.split(";"):
+                if cookie.strip().startswith("user-info="):
+                    value = cookie.split("=", 1)[1]
+                    try:
+                        return json.loads(value)
+                    except:
+                        return []
+            return []
 
-            if student_id and name:
-                message.text = f"{name}님 환영합니다!"
-                message.style.color = "green"
+        def on_login_click(ev):
+            input_sid = document["student-id"].value.strip()
+            input_name = document["name"].value.strip()
+
+            if not input_sid or not input_name:
+                document["login-message"].text = "학번과 이름을 모두 입력하세요."
+                return
+
+            user_info_array = get_user_info_array()
+            matched_user = None
+
+            for user in user_info_array:
+                if user["studentNumber"] == input_sid and user["name"] == input_name:
+                    matched_user = user
+                    break
+
+            if matched_user:
+                # SessionStorage 에 저장
+                window.sessionStorage.setItem("userInfo", json.dumps(matched_user))
+                alert("로그인 성공 !\n메인페이지로 이동합니다.");
+                window.location.href = "index.html"
             else:
-                message.text = "모든 항목을 입력해주세요."
-                message.style.color = "red"
+                document["login-message"].text = "일치하는 회원 정보가 없습니다."
 
+        # 버튼에 이벤트 바인딩
         document["login-button"].bind("click", on_login_click)
     </script>
 

@@ -4,7 +4,8 @@
     <meta charset="UTF-8">
     <title>여행 추천 UI</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/brython@3.9.5/brython.min.js"></script>
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/brython@3.11.0/brython.min.js"></script>
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/brython@3.11.0/brython_stdlib.js"></script>
 
     <style>
         html, body {
@@ -169,10 +170,8 @@
 
     <!-- DROPDOWN MENU -->
     <div class="menu" id="menu">
-        <a href="signup.html" class="menu-item">회원가입</a>
-        <a href="login.html" class="menu-item">로그인</a>
+        <!-- 여기에 Brython이 동적으로 삽입할 내용이 들어감 -->
     </div>
-
 
     <!-- MAIN CONTENT -->
     <div class="container">
@@ -208,8 +207,43 @@
 
     <!-- BRYTHON SCRIPT -->
     <script type="text/python">
-        from browser import document, window
+        from browser import document, window, html
+        import json
 
+        def setup_menu():
+            menu = document["menu"]
+            menu.clear()
+
+            user_info_str = window.sessionStorage.getItem("userInfo")
+
+            if user_info_str is None:
+                # 로그인 안 된 경우
+                menu <= html.A("회원가입", href="signup.html", Class="menu-item")
+                menu <= html.A("로그인", href="login.html", Class="menu-item")
+            else:
+                try:
+                    user_info = json.loads(user_info_str)
+                    name = user_info.get("name", "회원")
+                    # 인사말 (텍스트만, 클릭 안 됨)
+                    greet = html.SPAN(f"{name}님 반가워요", Class="menu-item")
+                    greet.style.cursor = "default"
+                    greet.style.marginRight = "10px"
+                    menu <= greet
+
+                    # 로그아웃 버튼
+                    logout = html.A("로그아웃", href="#", Class="menu-item")
+                    logout.bind("click", on_logout)
+                    menu <= logout
+                except:
+                    # 파싱 실패 시 강제 로그아웃
+                    on_logout(None)
+
+        def on_logout(ev):
+            window.sessionStorage.removeItem("userInfo")
+            window.location.href = "index.html"  # 메인 페이지로 이동
+
+        setup_menu()
+        
         def toggle_menu(event):
             menu = document["menu"]
             menu.classList.toggle("show")
@@ -218,16 +252,26 @@
 
         def check_and_redirect(target_page):
             session = window.sessionStorage
-            student_id = session["student_id"] if "student_id" in session else None
-            name = session["name"] if "name" in session else None
-            personality = session["personality"] if "personality" in session else None
 
-            if not student_id or not name:
+            if "userInfo" not in session:
                 window.location.href = "login.html"
-            elif not personality:
-                window.location.href = "personality_test.html"
-            else:
-                window.location.href = target_page
+                return
+
+            try:
+                user_info = json.loads(session["userInfo"])
+                student_id = user_info.get("studentNumber")
+                name = user_info.get("name")
+                personality = user_info.get("mbti")  # null 이거나 문자열 "null"
+
+                if not student_id or not name:
+                    window.location.href = "login.html"
+                elif not personality or personality == "null":
+                    window.location.href = "personality_test.html"
+                else:
+                    window.location.href = target_page
+            except Exception as e:
+                # 예외 발생시 로그인 페이지로
+                window.location.href = "login.html"
 
         def go_to_team_match(event):
             check_and_redirect("team_match.html")
