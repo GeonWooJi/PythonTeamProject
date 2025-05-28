@@ -155,6 +155,93 @@
         .btn-green:hover {
             background-color: #1e7e34;
         }
+
+        .scroll-container-2 {
+            display: flex;
+            overflow-x: auto;
+            gap: 16px;
+            padding: 10px;
+        }
+
+        .box-2 {
+            min-width: 200px;
+            padding: 0;
+            background: #fff;
+            border-radius: 12px;
+            box-shadow: 0 0 6px rgba(0,0,0,0.1);
+            overflow: hidden;
+            flex-shrink: 0;
+        }
+
+        .image-wrapper-2 {
+            position: relative;
+            width: 100%;
+            height: 120px;
+            overflow: hidden;
+        }
+
+        .image-wrapper-2 img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+        }
+
+        .team-title-2 {
+            position: absolute;
+            bottom: 10px;
+            left: 12px;
+            color: white;
+            font-weight: bold;
+            font-size: 16px;
+            text-shadow: 0 0 5px rgba(0,0,0,0.7);
+        }
+
+        .tag-container-2 {
+            padding: 10px;
+            display: flex;
+            gap: 6px;
+            flex-wrap: wrap;
+        }
+
+        .tag-2 {
+            background: #007bff;
+            color: white;
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 12px;
+        }
+
+        .scroll-container-3 {
+            display: flex;
+            overflow-x: auto;
+            gap: 16px;
+            padding: 10px;
+        }
+
+        .box-3 {
+            position: relative;
+            min-width: 220px;
+            height: 140px;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 0 6px rgba(0,0,0,0.15);
+            background-size: cover;
+            background-position: center;
+            flex-shrink: 0;
+        }
+
+        .box-label-3 {
+            position: absolute;
+            top: 10px;
+            left: 12px;
+            background: rgba(0, 0, 0, 0.5);  /* 반투명 배경 */
+            color: white;
+            padding: 4px 8px;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: bold;
+        }
     </style>
 </head>
 <body onload="brython()">
@@ -176,15 +263,8 @@
     <!-- MAIN CONTENT -->
     <div class="container">
         <h2>여기로 떠나는건 어때요?</h2>
-        <div class="scroll-container">
-            <div class="box">
-                <div class="tag-container">
-                    <div class="tag"></div>
-                    <div class="tag"></div>
-                </div>
-            </div>
-            <div class="box"></div>
-            <div class="box"></div>
+        <div class="scroll-container-2" id="team-list-container">
+            <!-- 여기에 Brython으로 팀 박스들을 동적으로 삽입 -->
         </div>
 
         <h2>이런 파티원들도 있어요 !</h2>
@@ -192,12 +272,9 @@
             <!-- .box 요소는 브라이썬이 생성할 것 -->
         </div>
 
-
         <h2>이런 여행지는 어때요?</h2>
-        <div class="scroll-container">
-            <div class="box"></div>
-            <div class="box"></div>
-            <div class="box"></div>
+        <div class="scroll-container-3" id="place-list">
+            <!-- Brython 또는 JS로 동적으로 생성하거나, 직접 추가 가능 -->
         </div>
 
     <button class="btn btn-blue" id="match-team-btn">내 성격과 유사한 팀 찾기</button>
@@ -209,6 +286,89 @@
         from browser import document, window, html
         import json
         import random
+
+        places = [
+            {
+                "img": "https://img1.daumcdn.net/thumb/R1280x0/?fname=http://t1.daumcdn.net/brunch/service/user/atiO/image/KxW6oS-eFfOfNQj0e1bqF7VC2wk.jpg",
+                "label": "강릉 - 해변"
+            },
+            {
+                "img": "https://i.namu.wiki/i/WycRqSjG5DHRghc30APRPIiGStu64ygdJxkb-pWnyHFNK_7HmyEeBkZtEJhgQIdxziuad4c-RKfPt-J28I7C1g.webp",
+                "label": "부산 - 광안대교"
+            },
+            {
+                "img": "https://api.cdn.visitjeju.net/photomng/imgpath/202312/13/746f66e0-74a4-40f2-9cdc-10ddff4134e7.jpg",
+                "label": "제주 - 성산일출봉"
+            }
+        ]
+
+        container = document["place-list"]
+
+        for place in places:
+            box = html.DIV(Class="box-3", style={"backgroundImage": f"url({place['img']})"})
+            label = html.DIV(place["label"], Class="box-label-3")
+            box <= label
+            container <= box
+
+
+        def load_team_list():
+            cookies = window.document.cookie.split("; ")
+            team_list = []
+
+            for cookie in cookies:
+                if cookie.startswith("team-list="):
+                    value = cookie[len("team-list="):]
+                    try:
+                        decoded = window.decodeURIComponent(value)
+                        parsed = json.loads(decoded)
+                        if isinstance(parsed, dict):
+                            team_list = [parsed]
+                        elif isinstance(parsed, list):
+                            team_list = parsed
+                    except:
+                        team_list = []
+
+            container = document["team-list-container"]
+            container.clear()
+
+            for team in team_list:
+                box = html.DIV(Class="box-2")
+
+                # ✅ 클릭 핸들러 생성
+                def make_click_handler(team_info):
+                    def on_click(ev):
+                        kakao_link = team_info.get("userInfo", {}).get("kakaoProfileLink", "")
+                        if kakao_link:
+                            window.open(kakao_link)
+                        else:
+                            window.alert("카카오 링크가 없습니다.")
+                    return on_click
+
+                box.bind("click", make_click_handler(team))
+
+                # ✅ 이미지 영역
+                image_wrapper = html.DIV(Class="image-wrapper-2")
+                if team.get("imgSrc", ""):
+                    image_tag = html.IMG(src=team["imgSrc"])
+                    image_wrapper <= image_tag
+
+                # ✅ 팀 제목 (이미지 안쪽에 흰색으로 표시)
+                title = html.DIV(team["teamName"], Class="team-title-2")
+                image_wrapper <= title
+                box <= image_wrapper
+
+                # ✅ 태그 표시
+                tag_container = html.DIV(Class="tag-container-2")
+                for tag in team.get("tag", []):
+                    tag_div = html.DIV(f"#{tag}", Class="tag-2")
+                    tag_container <= tag_div
+                box <= tag_container
+
+                # ✅ 삽입
+                container <= box
+
+        # 호출
+        load_team_list()
 
         # 이미지 리스트
         bg_images = [

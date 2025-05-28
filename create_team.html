@@ -248,7 +248,6 @@
         <!-- 여기에 Brython이 동적으로 삽입할 내용이 들어감 -->
     </div>
 
-
     <!-- FORM -->
     <div class="container">
         <h2>새로운 팀 만들기</h2>
@@ -257,7 +256,7 @@
         <input type="text" id="team-name" placeholder="예: 자유로운 여행가들">
 
         <label for="image-url">여행지 예시 이미지 URL</label>
-        <input type="url" id="image-url" placeholder="https://example.com/image.jpg">
+        <input type="text" id="image-url" placeholder="https://example.com/image.jpg">
         <div class="img-preview" id="image-preview"></div>
 
         <div class="tag-section">
@@ -274,42 +273,21 @@
     </div>
 
     <script type="text/python">
-        from browser import document, window, html
         import json
+        from browser import document, html, alert, window
 
-        def setup_menu():
-            menu = document["menu"]
-            menu.clear()
+        team_data = { #쿠키 데이터 딕셔너리
+            "teamName" : None,
+            "imgSrc" : None,
+            "tag" : [ ],
+            "userInfo" : { }
+        }
 
-            user_info_str = window.sessionStorage.getItem("userInfo")
+        tag_data = [] #모든 태그
 
-            if user_info_str is None:
-                # 로그인 안 된 경우
-                menu <= html.A("회원가입", href="signup.html", Class="menu-item")
-                menu <= html.A("로그인", href="login.html", Class="menu-item")
-            else:
-                try:
-                    user_info = json.loads(user_info_str)
-                    name = user_info.get("name", "회원")
-                    # 인사말 (텍스트만, 클릭 안 됨)
-                    greet = html.SPAN(f"{name}님 반가워요", Class="menu-item")
-                    greet.style.cursor = "default"
-                    greet.style.marginRight = "10px"
-                    menu <= greet
-
-                    # 로그아웃 버튼
-                    logout = html.A("로그아웃", href="#", Class="menu-item")
-                    logout.bind("click", on_logout)
-                    menu <= logout
-                except:
-                    # 파싱 실패 시 강제 로그아웃
-                    on_logout(None)
-
-        def on_logout(ev):
-            window.sessionStorage.removeItem("userInfo")
-            window.location.href = "index.html"  # 메인 페이지로 이동
-
-        setup_menu()
+        create_button = document["create-team-btn"]
+        team_name = document["team-name"]
+        image_url = document["image-url"]
 
         def toggle_menu(event):
             menu = document["menu"]
@@ -327,22 +305,108 @@
         def add_tag(ev):
             tag_input = document["tag-input"]
             tag = tag_input.value.strip()
-            if tag:
+            if tag: #태그 요소 만들기
                 tag_list = document["tag-list"]
                 tag_item = html.DIV(Class="tag-item")
                 tag_item <= html.SPAN(tag)
                 remove_btn = html.BUTTON("-")
+                tag_data.append(tag)
                 
                 def remove_tag(e):
+                    tag_data.remove(tag)
                     tag_item.remove()
+
+
                 remove_btn.bind("click", remove_tag)
                 
                 tag_item <= remove_btn
                 tag_list <= tag_item
                 tag_input.value = ""
 
+
         document["image-url"].bind("input", update_image_preview)
         document["add-tag"].bind("click", add_tag)
+
+        def create_button_click(event):
+            all_ok = True
+
+            if team_name_check(team_name.value) == False:
+                all_ok = False
+
+            if url_check(image_url.value) == False:
+                all_ok = False
+
+            if tag_check(tag_data) == False:
+                all_ok = False
+
+            if all_ok == False: #정보가 제대로 적혀있지 않음
+                alert_meassage() #경고 메세지
+                return 0
+
+            team_data["teamName"] = team_name.value
+            team_data["imgSrc"] = image_url.value
+            team_data["tag"] = tag_data
+            team_data["userInfo"] = get_userInfo() #userinfo 넣기 (미구현)
+
+            save_cookie(team_data) #쿠키 처리 (미구현)
+
+            pass
+
+        create_button.bind("click", create_button_click)
+
+        def team_name_check(tn): #팀 이름 검사
+            if len(tn) == 0: #뭐라도 적어야함
+                return False
+            return True
+
+        def url_check(ur):
+            ur = ur.strip().lower()
+
+            if len(ur) <= 5:
+                return False
+
+            return ur
+
+        def tag_check(tg): #태그 체크
+            if len(tg) == 0: #태그가 하나는 있어야함
+                return False
+            return True
+
+        def get_userInfo(): #session Stroage 데이터 받아오기 (미구현)
+            if "userInfo" in window.sessionStorage:
+                return json.loads(window.sessionStorage["userInfo"])
+            return {}
+
+    def save_cookie(new_team):
+        cookies = window.document.cookie.split("; ")
+        team_list = []
+
+        for cookie in cookies:
+            if cookie.startswith("team-list="):
+                value = cookie[len("team-list="):]
+                try:
+                    decoded = window.decodeURIComponent(value)
+                    parsed = json.loads(decoded)
+                    # 기존 쿠키가 dict 하나면 리스트로 바꿔줌
+                    if isinstance(parsed, dict):
+                        team_list = [parsed]
+                    elif isinstance(parsed, list):
+                        team_list = parsed
+                except:
+                    team_list = []
+
+        team_list.append(new_team)
+
+        json_str = json.dumps(team_list)
+        encoded = window.encodeURIComponent(json_str)
+        window.document.cookie = f"team-list={encoded}; path=/;"
+
+        window.console.log("✅ 팀 저장 완료:", team_list)
+
+
+        def alert_meassage():
+            alert("정보를 제대로 적어주세요")
+        
     </script>
 </body>
 </html>
