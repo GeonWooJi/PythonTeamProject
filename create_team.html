@@ -377,31 +377,31 @@
                 return json.loads(window.sessionStorage["userInfo"])
             return {}
 
-    def save_cookie(new_team):
-        cookies = window.document.cookie.split("; ")
-        team_list = []
+        def save_cookie(new_team):
+            cookies = window.document.cookie.split("; ")
+            team_list = []
 
-        for cookie in cookies:
-            if cookie.startswith("team-list="):
-                value = cookie[len("team-list="):]
-                try:
-                    decoded = window.decodeURIComponent(value)
-                    parsed = json.loads(decoded)
-                    # 기존 쿠키가 dict 하나면 리스트로 바꿔줌
-                    if isinstance(parsed, dict):
-                        team_list = [parsed]
-                    elif isinstance(parsed, list):
-                        team_list = parsed
-                except:
-                    team_list = []
+            for cookie in cookies:
+                if cookie.startswith("team-list="):
+                    value = cookie[len("team-list="):]
+                    try:
+                        decoded = window.decodeURIComponent(value)
+                        parsed = json.loads(decoded)
+                        # 기존 쿠키가 dict 하나면 리스트로 바꿔줌
+                        if isinstance(parsed, dict):
+                            team_list = [parsed]
+                        elif isinstance(parsed, list):
+                            team_list = parsed
+                    except:
+                        team_list = []
 
-        team_list.append(new_team)
+            team_list.append(new_team)
 
-        json_str = json.dumps(team_list)
-        encoded = window.encodeURIComponent(json_str)
-        window.document.cookie = f"team-list={encoded}; path=/;"
+            json_str = json.dumps(team_list)
+            encoded = window.encodeURIComponent(json_str)
+            window.document.cookie = f"team-list={encoded}; path=/;"
 
-        window.console.log("✅ 팀 저장 완료:", team_list)
+            window.console.log("✅ 팀 저장 완료:", team_list)
 
 
         def alert_meassage():
