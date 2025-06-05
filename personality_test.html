@@ -1,332 +1,282 @@
-    <!DOCTYPE html>
-    <html lang="ko">
-    <head>
-        <meta charset="UTF-8">
-        <title>성격 테스트 페이지</title>
-        <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-        <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/brython@3.11.0/brython.min.js"></script>
-        <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/brython@3.11.0/brython_stdlib.js"></script>
-        <style>
-            html, body {
-                margin: 0;
-                padding: 0;
-                font-family: sans-serif;
-                background-color: #f2f2f2;
-            }
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>성격 테스트 페이지</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/brython@3.11.0/brython.min.js"></script>
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/brython@3.11.0/brython_stdlib.js"></script>
+    <style>
+        html, body {
+            margin: 0;
+            padding: 0;
+            font-family: sans-serif;
+            background-color: #f2f2f2;
+        }
 
-            /* HEADER */
-            .header {
-                background-color: #ffffff;
-                height: 50px;
-                display: flex;
-                align-items: center;
-                justify-content: space-between;
-                padding: 0 16px;
-                box-shadow: 0 1px 4px rgba(0,0,0,0.1);
-                position: fixed;
-                top: 0;
-                width: 100%;
-                z-index: 10;
-            }
+        /* HEADER */
+        .header {
+            background-color: #ffffff;
+            height: 50px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 16px;
+            box-shadow: 0 1px 4px rgba(0,0,0,0.1);
+            position: fixed;
+            top: 0;
+            width: 100%;
+            z-index: 10;
+        }
 
-            .menu-button {
-                width: 24px;
-                height: 18px;
-                cursor: pointer;
-                display: flex;
-                flex-direction: column;
-                justify-content: space-between;
-            }
+        .menu-button {
+            width: 24px;
+            height: 18px;
+            cursor: pointer;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
 
-            .menu-button div {
-                background-color: #333;
-                height: 3px;
-                border-radius: 2px;
-            }
+        .menu-button div {
+            background-color: #333;
+            height: 3px;
+            border-radius: 2px;
+        }
 
-            .menu {
-                background-color: white;
-                width: 100%;
-                position: fixed;
-                top: 50px;
-                left: 0;
-                z-index: 9;
-                max-height: 0;
-                overflow: hidden;
-                transition: max-height 0.3s ease;
-                box-shadow: 0 2px 6px rgba(0,0,0,0.1);
-            }
+        .menu {
+            background-color: white;
+            width: 100%;
+            position: fixed;
+            top: 50px;
+            left: 0;
+            z-index: 9;
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+        }
 
-            .menu.show {
-                max-height: 300px;
-            }
+        .menu.show {
+            max-height: 300px;
+        }
 
-            .menu-item {
-                padding: 16px;
-                border-bottom: 1px solid #ddd;
-                text-decoration: none;
-                color: black;
-                display: block;
-            }
+        .menu-item {
+            padding: 16px;
+            border-bottom: 1px solid #ddd;
+            text-decoration: none;
+            color: black;
+            display: block;
+        }
 
-            .header-title {
-                position: absolute;
-                left: 50%;
-                transform: translateX(-50%);
-                font-weight: bold;
-                font-size: 14px;
-            }
+        .header-title {
+            position: absolute;
+            left: 50%;
+            transform: translateX(-50%);
+            font-weight: bold;
+            font-size: 14px;
+        }
 
-            .header-title a {
-                text-decoration: none;
-                color: #000;
-            }
+        .header-title a {
+            text-decoration: none;
+            color: #000;
+        }
 
-            .container {
-                max-width: 480px;
-                margin: 50px auto 0 auto;  /* header 높이 고려 */
-                padding: 20px;
-                background-color: white;
-                min-height: calc(100vh - 50px);
-                box-sizing: border-box;
-            }
+        .container {
+            max-width: 480px;
+            margin: 50px auto 0 auto;
+            padding: 20px;
+            background-color: white;
+            min-height: calc(100vh - 50px);
+            box-sizing: border-box;
+        }
 
-            h2 {
-                text-align: center;
-                margin-bottom: 30px;
-            }
+        h2 {
+            text-align: center;
+            margin-bottom: 30px;
+        }
 
-            label {
-                display: block;
-                margin-top: 16px;
-                font-weight: bold;
-            }
+        label {
+            display: block;
+            margin-top: 16px;
+            font-weight: bold;
+        }
 
-            input[type="text"],
-            input[type="url"] {
-                width: 100%;
-                padding: 10px;
-                margin-top: 6px;
-                border-radius: 6px;
-                border: 1px solid #ccc;
-                box-sizing: border-box;
-            }
+        input[type="text"],
+        input[type="url"] {
+            width: 100%;
+            padding: 10px;
+            margin-top: 6px;
+            border-radius: 6px;
+            border: 1px solid #ccc;
+            box-sizing: border-box;
+        }
 
-            button {
-                margin-top: 24px;
-                width: 100%;
-                padding: 12px;
-                background-color: #555;
-                color: white;
-                border: none;
-                border-radius: 6px;
-                font-size: 16px;
-            }
+        button {
+            margin-top: 24px;
+            width: 100%;
+            padding: 12px;
+            background-color: #555;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 16px;
+        }
 
-            button:hover {
-                background-color: #333;
-            }
-        </style>
-    </head>
-    <body onload="brython()">
-
-        <!-- HEADER -->
-        <div class="header">
-            <div class="menu-button" id="hamburger">
-                <div></div>
-                <div></div>
-                <div></div>
-            </div>
-            <div class="header-title">
-                <a href="index.html">성격기반 랜덤여행</a>
-            </div>
+        button:hover {
+            background-color: #333;
+        }
+    </style>
+</head>
+<body onload="brython()">
+    <!-- HEADER -->
+    <div class="header">
+        <div class="menu-button" id="hamburger">
+            <div></div>
+            <div></div>
+            <div></div>
         </div>
-
-        <!-- DROPDOWN MENU -->
-        <div class="menu" id="menu">
-            <!-- 여기에 Brython이 동적으로 삽입할 내용이 들어감 -->
+        <div class="header-title">
+            <a href="index.html">성격기반 랜덤여행</a>
         </div>
+    </div>
 
+    <!-- DROPDOWN MENU -->
+    <div class="menu" id="menu"></div>
 
-        <!-- FORM -->
-        <div class="container" id="container">
+    <!-- FORM -->
+    <div class="container" id="container"></div>
 
-        </div>
-        <script type="text/python">
-            from browser import document, alert, timer, window, html
-            import json
+    <script type="text/python">
+        from browser import document, alert, timer, window, html
+        import json
 
-            def setup_menu():
-                menu = document["menu"]
-                menu.clear()
+        def setup_menu():
+            menu = document["menu"]
+            menu.clear()
+            user_info_str = window.sessionStorage.getItem("userInfo")
+            if user_info_str is None:
+                menu <= html.A("회원가입", href="signup.html", Class="menu-item")
+                menu <= html.A("로그인", href="login.html", Class="menu-item")
+            else:
+                try:
+                    user_info = json.loads(user_info_str)
+                    name = user_info.get("name", "회원")
+                    greet = html.SPAN(f"{name}님 반가워요", Class="menu-item")
+                    greet.style.cursor = "default"
+                    greet.style.marginRight = "10px"
+                    menu <= greet
+                    logout = html.A("로그아웃", href="#", Class="menu-item")
+                    logout.bind("click", on_logout)
+                    menu <= logout
+                except:
+                    on_logout(None)
 
-                user_info_str = window.sessionStorage.getItem("userInfo")
+        questions = [
+            ("갑자기 한달의 시간이 생긴 당신! 누구와 함께 여행을 갈까?", ("소수 정예가 마음이 편해", "다다익선! 여러 일행들과 함께 갈래"), "I", "E"),
+            ("여행하는 중 한국인 무리를 만났어. 같은 방향으로 가자고?", ("거절", "수락"), "I", "E"),
+            ("내가 고른 숙소는?", ("숙소 만큼은 나 혼자", "현지 친구 만날래! 게스트하우스"), "I", "E"),
+            ("비행기에서의 모습은", ("여행지에서의 계획을 되새기고 복습", "여행지에서 일어날 일을 상상"), "S", "N"),
+            ("여행지에서의 잠들기 전 하는 생각은", ("내일 할 일을 상기한다", "상상의 나래를 펼친다"), "S", "N"),
+            ("새로운 음식을 먹어보고…", ("색을 보니까… 짤거같은데?", "아…사과다…"), "S", "N"),
+            ("식당에서 부당한 대우를 받았을 때", ("일단 참는다", "따진다"), "F", "T"),
+            ("기념품은 어떤 걸?", ("내가 사주고 싶은 걸", "원하는 걸 직접 물어본다"), "F", "T"),
+            ("여행지에서 사고가 났다는 연락을 받았다!", ("괜찮아? ㅜㅜ", "보험 들었어?"), "F", "T"),
+            ("여행지를 정하는 스타일은?", ("어쩐지 끌리는 곳으로", "거리,비용 등 조건 따진다"), "P", "J"),
+            ("원래 가려던 곳이 휴관이라면?", ("새로운 곳을 찾아 떠난다", "플랜 B 완벽 준비"), "P", "J"),
+            ("여행지에 도착했을 때", ("아 빼먹었다… 옆사람에게 빌린다", "모든 준비물이 완벽"), "P", "J"),
+        ]
 
-                if user_info_str is None:
-                    # 로그인 안 된 경우
-                    menu <= html.A("회원가입", href="signup.html", Class="menu-item")
-                    menu <= html.A("로그인", href="login.html", Class="menu-item")
-                else:
-                    try:
-                        user_info = json.loads(user_info_str)
-                        name = user_info.get("name", "회원")
-                        # 인사말 (텍스트만, 클릭 안 됨)
-                        greet = html.SPAN(f"{name}님 반가워요", Class="menu-item")
-                        greet.style.cursor = "default"
-                        greet.style.marginRight = "10px"
-                        menu <= greet
+        mbti_scores = {"E": 0, "I": 0, "S": 0, "N": 0, "T": 0, "F": 0, "J": 0, "P": 0}
+        current_index = 0
 
-                        # 로그아웃 버튼
-                        logout = html.A("로그아웃", href="#", Class="menu-item")
-                        logout.bind("click", on_logout)
-                        menu <= logout
-                    except:
-                        # 파싱 실패 시 강제 로그아웃
-                        on_logout(None)
-            
-            # 여행 성향 테스트 데이터
-            questions = [
-                # E/I
-                ("갑자기 한달의 시간이 생긴 당신! 누구와 함께 여행을 갈까?", ("소수 정예가 마음이 편해", "다다익선! 여러 일행들과 함께 갈래"), "I", "E"),
-                ("여행하는 중 한국인 무리를 만났어. 같은 방향으로 가자고?", ("거절", "수락"), "I", "E"),
-                ("내가 고른 숙소는?", ("숙소 만큼은 나 혼자", "현지 친구 만날래! 게스트하우스"), "I", "E"),
-                
-                # N/S
-                ("비행기에서의 모습은", ("여행지에서의 계획을 되새기고 복습", "여행지에서 일어날 일을 상상"), "S", "N"),
-                ("여행지에서의 잠들기 전 하는 생각은", ("내일 할 일을 상기한다", "상상의 나래를 펼친다"), "S", "N"),
-                ("새로운 음식을 먹어보고…", ("색을 보니까… 짤거같은데?", "아…사과다…"), "S", "N"),
+        def start_test():
+            document["container"].clear()
+            show_question()
 
-                # T/F
-                ("식당에서 부당한 대우를 받았을 때", ("일단 참는다", "따진다"), "F", "T"),
-                ("기념품은 어떤 걸?", ("내가 사주고 싶은 걸", "원하는 걸 직접 물어본다"), "F", "T"),
-                ("여행지에서 사고가 났다는 연락을 받았다!", ("괜찮아? ㅜㅜ", "보험 들었어?"), "F", "T"),
+        def show_question():
+            global current_index
+            if current_index >= len(questions):
+                show_test_result()
+                return
+            q, (opt1, opt2), left, right = questions[current_index]
+            container = document["container"]
+            container.clear()
+            container <= html.H2(f"Q{current_index+1}. {q}")
+            btn1 = html.BUTTON(opt1)
+            btn2 = html.BUTTON(opt2)
+            btn1.style.marginTop = "20px"
+            btn2.style.marginTop = "10px"
+            btn1.bind("click", lambda ev: on_answer(left))
+            btn2.bind("click", lambda ev: on_answer(right))
+            container <= btn1
+            container <= btn2
 
-                # J/P
-                ("여행지를 정하는 스타일은?", ("어쩐지 끌리는 곳으로", "거리,비용 등 조건 따진다"), "P", "J"),
-                ("원래 가려던 곳이 휴관이라면?", ("새로운 곳을 찾아 떠난다", "플랜 B 완벽 준비"), "P", "J"),
-                ("여행지에 도착했을 때", ("아 빼먹었다… 옆사람에게 빌린다", "모든 준비물이 완벽"), "P", "J"),
-            ]
+        def on_answer(selected_trait):
+            global current_index
+            mbti_scores[selected_trait] += 1
+            current_index += 1
+            show_question()
 
-            # 성향별 점수 저장
-            mbti_scores = {"E": 0, "I": 0, "S": 0, "N": 0, "T": 0, "F": 0, "J": 0, "P": 0}
-
-            # 현재 질문 인덱스
-            current_index = 0
-
-            # 테스트 시작 함수
-            def start_test():
-                document["container"].clear()
-                show_question()
-
-            # 질문 표시 함수
-            def show_question():
-                global current_index
-                if current_index >= len(questions):
-                    show_test_result()
-                    return
-
-                q, (opt1, opt2), left, right = questions[current_index]
-                container = document["container"]
-                container.clear()
-
-                container <= html.H2(f"Q{current_index+1}. {q}")
-
-                btn1 = html.BUTTON(opt1)
-                btn2 = html.BUTTON(opt2)
-
-                btn1.style.marginTop = "20px"
-                btn2.style.marginTop = "10px"
-
-                btn1.bind("click", lambda ev: on_answer(left))
-                btn2.bind("click", lambda ev: on_answer(right))
-
-                container <= btn1
-                container <= btn2
-
-            # 답변 처리 함수
-            def on_answer(selected_trait):
-                global current_index
-                mbti_scores[selected_trait] += 1
-                current_index += 1
-                show_question()
-
-            # 결과 출력 함수
-            def show_test_result():
-                test_result = ""
-                test_result += "E" if mbti_scores["E"] >= mbti_scores["I"] else "I"
-                test_result += "S" if mbti_scores["S"] >= mbti_scores["N"] else "N"
-                test_result += "T" if mbti_scores["T"] >= mbti_scores["F"] else "F"
-                test_result += "J" if mbti_scores["J"] >= mbti_scores["P"] else "P"
-
-                # 기본값
-                name = "당신"
-                mbti = test_result  # 일단 mbti에 테스트 결과 저장
-
-                # userInfo 불러오기
-                user_info_str = window.sessionStorage.getItem("userInfo")
-                if user_info_str:
-                    try:
-                        user_info = json.loads(user_info_str)
-                    except:
-                        user_info = {}
-                else:
+        def show_test_result():
+            test_result = ""
+            test_result += "E" if mbti_scores["E"] >= mbti_scores["I"] else "I"
+            test_result += "S" if mbti_scores["S"] >= mbti_scores["N"] else "N"
+            test_result += "T" if mbti_scores["T"] >= mbti_scores["F"] else "F"
+            test_result += "J" if mbti_scores["J"] >= mbti_scores["P"] else "P"
+            name = "당신"
+            mbti = test_result
+            user_info_str = window.sessionStorage.getItem("userInfo")
+            if user_info_str:
+                try:
+                    user_info = json.loads(user_info_str)
+                except:
                     user_info = {}
+            else:
+                user_info = {}
+            user_info["mbti"] = test_result
+            window.sessionStorage.setItem("userInfo", json.dumps(user_info))
+            name = user_info.get("name", "당신")
+            mbti = user_info.get("mbti", test_result)
+            mbti_compatibility = {
+                "INTJ": {"best": ["ENFP", "ENTP"], "worst": ["ESFJ", "ISFJ"]},
+                "INFP": {"best": ["ENFJ", "ENTJ"], "worst": ["ESTP", "ESTJ"]},
+                "ENFP": {"best": ["INFJ", "INTJ"], "worst": ["ISTP", "ISTJ"]},
+                "INFJ": {"best": ["ENFP", "ENTP"], "worst": ["ESTP", "ISTP"]},
+                "ENFJ": {"best": ["INFP", "ISFP"], "worst": ["ISTP", "ESTP"]},
+                "ENTJ": {"best": ["INFP", "INTP"], "worst": ["ISFP", "INFP"]},
+                "INTP": {"best": ["ENTJ", "ESTJ"], "worst": ["ESFJ", "ISFJ"]},
+                "ENTP": {"best": ["INFJ", "INTJ"], "worst": ["ESFJ", "ISFJ"]},
+                "ISFP": {"best": ["ENFJ", "ESFJ"], "worst": ["INFP", "ENFP"]},
+                "ESFP": {"best": ["ISFJ", "ISTJ"], "worst": ["INFJ", "ENFJ"]},
+                "ISTP": {"best": ["ESFJ", "ESTJ"], "worst": ["ENFJ", "ENFP"]},
+                "ESTP": {"best": ["ISFJ", "ISTJ"], "worst": ["ENFJ", "INFJ"]},
+                "ISFJ": {"best": ["ESTP", "ESFP"], "worst": ["ENFJ", "ENFP"]},
+                "ESFJ": {"best": ["ISFP", "ISTP"], "worst": ["INFP", "ENFP"]},
+                "ISTJ": {"best": ["ESTP", "ESFP"], "worst": ["INFP", "ENFP"]},
+                "ESTJ": {"best": ["ISFP", "ISTP"], "worst": ["INFP", "INFJ"]}
+            }
+            compat_info = mbti_compatibility.get(mbti, {"best": [], "worst": []})
+            best_match = ", ".join(compat_info["best"])
+            worst_match = ", ".join(compat_info["worst"])
+            container = document["container"]
+            container.clear()
+            container <= html.H2(f"{name}님의 여행 MBTI는 {test_result}입니다.")
+            container <= html.P(f"✨ 최고의 궁합: {best_match}")
+            container <= html.P(f"⚠️ 최악의 궁합: {worst_match}")
 
-                # mbti 갱신 및 저장
-                user_info["mbti"] = test_result
-                window.sessionStorage.setItem("userInfo", json.dumps(user_info))
+        def on_logout(ev):
+            window.sessionStorage.removeItem("userInfo")
+            window.location.href = "index.html"
 
-                # 이름과 mbti 다시 읽기 (결과에 사용할 목적)
-                name = user_info.get("name", "당신")
-                mbti = user_info.get("mbti", test_result)
+        setup_menu()
 
-                # 궁합 정보 가져오기
-                mbti_compatibility = {
-                    "INTJ": {"best": ["ENFP", "ENTP"], "worst": ["ESFJ", "ISFJ"]},
-                    "INFP": {"best": ["ENFJ", "ENTJ"], "worst": ["ESTP", "ESTJ"]},
-                    "ENFP": {"best": ["INFJ", "INTJ"], "worst": ["ISTP", "ISTJ"]},
-                    "INFJ": {"best": ["ENFP", "ENTP"], "worst": ["ESTP", "ISTP"]},
-                    "ENFJ": {"best": ["INFP", "ISFP"], "worst": ["ISTP", "ESTP"]},
-                    "ENTJ": {"best": ["INFP", "INTP"], "worst": ["ISFP", "INFP"]},
-                    "INTP": {"best": ["ENTJ", "ESTJ"], "worst": ["ESFJ", "ISFJ"]},
-                    "ENTP": {"best": ["INFJ", "INTJ"], "worst": ["ESFJ", "ISFJ"]},
-                    "ISFP": {"best": ["ENFJ", "ESFJ"], "worst": ["INFP", "ENFP"]},
-                    "ESFP": {"best": ["ISFJ", "ISTJ"], "worst": ["INFJ", "ENFJ"]},
-                    "ISTP": {"best": ["ESFJ", "ESTJ"], "worst": ["ENFJ", "ENFP"]},
-                    "ESTP": {"best": ["ISFJ", "ISTJ"], "worst": ["ENFJ", "INFJ"]},
-                    "ISFJ": {"best": ["ESTP", "ESFP"], "worst": ["ENFJ", "ENFP"]},
-                    "ESFJ": {"best": ["ISFP", "ISTP"], "worst": ["INFP", "ENFP"]},
-                    "ISTJ": {"best": ["ESTP", "ESFP"], "worst": ["INFP", "ENFP"]},
-                    "ESTJ": {"best": ["ISFP", "ISTP"], "worst": ["INFP", "INFJ"]}
-                }
+        def toggle_menu(event):
+            menu = document["menu"]
+            menu.classList.toggle("show")
 
-                compat_info = mbti_compatibility.get(mbti, {"best": [], "worst": []})
-                best_match = ", ".join(compat_info["best"])
-                worst_match = ", ".join(compat_info["worst"])
-
-                # 결과 출력
-                container = document["container"]
-                container.clear()
-
-                container <= html.H2(f"{name}님의 여행 MBTI는 {test_result}입니다.")
-                container <= html.P(f"✨ 최고의 궁합: {best_match}")
-                container <= html.P(f"⚠️ 최악의 궁합: {worst_match}")
-
-            # 처음 로딩 시 시작
-            start_test()
-
-
-            def on_logout(ev):
-                window.sessionStorage.removeItem("userInfo")
-                window.location.href = "index.html"  # 메인 페이지로 이동
-
-            setup_menu()
-
-            def toggle_menu(event):
-                menu = document["menu"]
-                menu.classList.toggle("show")
-
-            document["hamburger"].bind("click", toggle_menu)
-        </script>
-    </body>
-    </html>
+        document["hamburger"].bind("click", toggle_menu)
+        start_test()
+    </script>
+</body>
+</html>

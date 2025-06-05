@@ -152,8 +152,10 @@
 
     </div>
     <script type="text/python">
-        from browser import document, alert, timer, window, html
+        from browser import document, html, alert, window
         import json
+        import random
+        from itertools import combinations
 
         def setup_menu():
             menu = document["menu"]
@@ -194,6 +196,66 @@
             menu.classList.toggle("show")
 
         document["hamburger"].bind("click", toggle_menu)
+
+        # MBTI 궁합 점수 예시 (일부만 표시, 실제론 전체 16x16 쌍을 채워야 함)
+        mbti_compat = {
+            "ENFP": {"INFJ": "최고", "INTP": "좋음", "ESTJ": "보통", "ISTJ": "최악"},
+            "INFJ": {"ENFP": "최고", "ENTP": "좋음", "ESTP": "보통", "ISFP": "나쁨"},
+            "INTP": {"ENFP": "좋음", "INFJ": "좋음", "ISFJ": "보통", "ESFP": "최악"},
+            "ESTJ": {"ISFJ": "최고", "ENFP": "보통"},
+            # 생략된 나머지는 실제 데이터로 채우세요
+        }
+
+        score_map = {
+            "최고": 5,
+            "좋음": 4,
+            "보통": 3,
+            "나쁨": 2,
+            "최악": 1
+        }
+
+        def get_score(m1, m2):
+            return score_map.get(mbti_compat.get(m1, {}).get(m2, "보통"), 3)
+
+        def is_valid_team(team):
+            for i in range(len(team)):
+                for j in range(i + 1, len(team)):
+                    score = get_score(team[i]["mbti"], team[j]["mbti"])
+                    if score < 4:
+                        return False
+            return True
+
+        def generate_team(users, team_size=4):
+            random.shuffle(users)
+            candidates = list(combinations(users, team_size))
+            random.shuffle(candidates)
+            for team in candidates:
+                if is_valid_team(team):
+                    return team
+            return None
+
+        def on_generate_team(ev):
+            user_list_str = window.sessionStorage.getItem("allUsers")
+            if not user_list_str:
+                alert("사용자 정보가 없습니다. 먼저 회원가입을 진행해주세요.")
+                return
+            try:
+                users = json.loads(user_list_str)
+            except:
+                alert("사용자 정보 파싱 오류.")
+                return
+
+            team = generate_team(users)
+            result_div = document["team-result"]
+            result_div.clear()
+            if team:
+                for member in team:
+                    result_div <= html.DIV(f"{member['name']} ({member['mbti']})")
+            else:
+                result_div <= html.DIV("조건에 맞는 팀을 구성할 수 없습니다.", style={"color": "red"})
+
+        document["generate-team"].bind("click", on_generate_team)
+
     </script>
 </body>
 </html>
