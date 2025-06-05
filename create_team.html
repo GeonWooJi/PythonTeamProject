@@ -276,6 +276,46 @@
         import json
         from browser import document, html, alert, window
 
+        def setup_menu():
+            menu = document["menu"]
+            menu.clear()
+
+            user_info_str = window.sessionStorage.getItem("userInfo")
+
+            if user_info_str is None:
+                # 로그인 안 된 경우
+                menu <= html.A("회원가입", href="signup.html", Class="menu-item")
+                menu <= html.A("로그인", href="login.html", Class="menu-item")
+            else:
+                try:
+                    user_info = json.loads(user_info_str)
+                    name = user_info.get("name", "회원")
+                    # 인사말 (텍스트만, 클릭 안 됨)
+                    greet = html.SPAN(f"{name}님 반가워요", Class="menu-item")
+                    greet.style.cursor = "default"
+                    greet.style.marginRight = "10px"
+                    menu <= greet
+
+                    # 로그아웃 버튼
+                    logout = html.A("로그아웃", href="#", Class="menu-item")
+                    logout.bind("click", on_logout)
+                    menu <= logout
+                except:
+                    # 파싱 실패 시 강제 로그아웃
+                    on_logout(None)
+
+        def on_logout(ev):
+            window.sessionStorage.removeItem("userInfo")
+            window.location.href = "index.html"  # 메인 페이지로 이동
+
+        setup_menu()
+        
+        def toggle_menu(event):
+            menu = document["menu"]
+            menu.classList.toggle("show")
+
+        document["hamburger"].bind("click", toggle_menu)
+
         team_data = { #쿠키 데이터 딕셔너리
             "teamName" : None,
             "imgSrc" : None,
@@ -288,12 +328,6 @@
         create_button = document["create-team-btn"]
         team_name = document["team-name"]
         image_url = document["image-url"]
-
-        def toggle_menu(event):
-            menu = document["menu"]
-            menu.classList.toggle("show")
-
-        document["hamburger"].bind("click", toggle_menu)
 
         def update_image_preview(ev):
             url = document["image-url"].value.strip()
@@ -402,6 +436,8 @@
             window.document.cookie = f"team-list={encoded}; path=/;"
 
             window.console.log("✅ 팀 저장 완료:", team_list)
+            alert("팀이 정상적으로 생성 되었습니다.\n메인페이지로 이동합니다.")
+            window.location.href = "index.html"
 
 
         def alert_meassage():
