@@ -133,6 +133,63 @@
             background-color: #f9f9f9;
             border: 1px solid #ddd;
         }
+
+        /* 각 팀 카드 박스 */
+        .box-2 {
+            width: 100%;
+            max-width: 500px;
+            margin: 20px auto;
+            background-color: #fff;
+            border-radius: 16px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+            cursor: pointer;
+            transition: transform 0.2s ease;
+        }
+        .box-2:hover {
+            transform: translateY(-5px);
+        }
+
+        /* 이미지 감싸는 wrapper */
+        .image-wrapper-2 {
+            position: relative;
+            width: 100%;
+            height: 280px;
+            overflow: hidden;
+        }
+        .image-wrapper-2 img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        /* 이미지 위 팀 이름 (흰 글씨, 중앙 하단) */
+        .team-title-2 {
+            position: absolute;
+            bottom: 16px;
+            left: 16px;
+            color: white;
+            font-size: 24px;
+            font-weight: bold;
+            text-shadow: 1px 1px 3px rgba(0,0,0,0.6);
+        }
+
+        /* 태그 컨테이너 */
+        .tag-container-2 {
+            padding: 16px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        /* 개별 태그 */
+        .tag-2 {
+            background-color: #007bff;
+            color: white;
+            padding: 8px 12px;
+            border-radius: 20px;
+            font-size: 14px;
+        }
     </style>
 </head>
 <body onload="brython()">
@@ -159,6 +216,9 @@
         <h2>내 성격과 유사한 팀 찾기</h2>
         <button id="match-button">랜덤 팀 배정</button>
         <div id="team-result" style="margin-top:20px; display:none;"></div>
+        <div class="scroll-container-2" id="team-list-container">
+            <!-- 여기에 Brython으로 팀 박스들을 동적으로 삽입 -->
+        </div>
     </div>
 
     <script type="text/python">
@@ -269,33 +329,17 @@
             
             return True
 
-        def display_team_result(team_info, user_info):
+        def display_team_result(team_info):
             result_div = document["team-result"]
-            result_div.style.display = "block"
-            
-            team_name = team_info.get("teamName", "알 수 없는 팀")
-            members = team_info.get("userInfo", {})
-            
-            html_content = f"<h3>🎉 {team_name}에 배정되었습니다!</h3>"
-            html_content += "<h4>팀원 정보:</h4><ul>"
-            
-            # 기존 팀원들
-            for name, info in members.items():
-                mbti = info.get("mbti", "N/A")
-                html_content += f"<li>{name} ({mbti})</li>"
-            
-            # 본인 추가
-            user_name = user_info.get("name", "나")
-            user_mbti = user_info.get("mbti", "N/A")
-            html_content += f"<li><strong>{user_name} ({user_mbti}) - 새로 합류!</strong></li>"
-            
-            html_content += "</ul>"
-            result_div.innerHTML = html_content
+            load_team_list(team_info)
 
-        def match_user_to_team():
+
+
+        def match_user_to_team(event):
             user = get_user_info()
-            user_mbti = user.get("mbti")
+            user_mbti = user['mbti'] if user['mbti'] is not None else "null"
             
+            window.console.log(user_mbti);
             # 사용자 정보 확인
             if not user:
                 alert("로그인이 필요합니다.")
@@ -315,41 +359,81 @@
 
             for team in team_list:
                 members = team.get("userInfo", {})
-                
-                # 이미 팀에 속해있는지 확인
-                if user.get("name") in members:
-                    alert(f"이미 {team.get('teamName', '해당 팀')}에 속해있습니다!")
-                    return
-                
-                member_mbtis = [m.get("mbti") for m in members.values() if m.get("mbti")]
-                
+
+                # 각 멤버가 딕셔너리인지 확인하고 MBTI 수집
+                member_mbtis = []
+                for m in members.values():
+                    if isinstance(m, dict):
+                        mbti = m.get("mbti")
+                        if mbti:
+                            member_mbtis.append(mbti)
+
+                # MBTI 궁합이 맞는지 검사
                 if is_compatible(user_mbti, member_mbtis):
                     compatible_teams.append(team)
 
+
+            window.console.log(compatible_teams)
+                
             if not compatible_teams:
                 alert("현재 궁합이 맞는 팀이 없습니다. 나중에 다시 시도해보세요.")
                 return
 
             # 랜덤으로 팀 선택
             selected_team = random.choice(compatible_teams)
-            
-            # 사용자를 팀에 추가
-            selected_team["userInfo"][user["name"]] = user
 
-            # 팀 리스트 저장
-            save_team_list(team_list)
+            window.console.log(selected_team)
 
             # 결과 표시
-            display_team_result(selected_team, user)
+            display_team_result(selected_team)
 
-        # 이벤트 바인딩
-        def init():
-            setup_menu()
-            document["hamburger"].bind("click", toggle_menu)
-            document["match-button"].bind("click", lambda ev: match_user_to_team())
 
-        # 초기화 실행
-        init()
+        def load_team_list(team):
+            team_list = [team]
+            window.console.log(team_list);
+
+            container = document["team-list-container"]
+            container.clear()
+
+            for team in team_list:
+                box = html.DIV(Class="box-2")
+
+                # ✅ 클릭 핸들러 생성
+                def make_click_handler(team_info):
+                    def on_click(ev):
+                        kakao_link = team_info.get("userInfo", {}).get("kakaoProfileLink", "")
+                        if kakao_link:
+                            window.open(kakao_link)
+                        else:
+                            window.alert("카카오 링크가 없습니다.")
+                    return on_click
+
+                box.bind("click", make_click_handler(team))
+
+                # ✅ 이미지 영역
+                image_wrapper = html.DIV(Class="image-wrapper-2")
+                if team.get("imgSrc", ""):
+                    image_tag = html.IMG(src=team["imgSrc"])
+                    image_wrapper <= image_tag
+
+                # ✅ 팀 제목 (이미지 안쪽에 흰색으로 표시)
+                title = html.DIV(team["teamName"], Class="team-title-2")
+                image_wrapper <= title
+                box <= image_wrapper
+
+                # ✅ 태그 표시
+                tag_container = html.DIV(Class="tag-container-2")
+                for tag in team.get("tag", []):
+                    tag_div = html.DIV(f"#{tag}", Class="tag-2")
+                    tag_container <= tag_div
+                box <= tag_container
+
+                # ✅ 삽입
+                container <= box
+
+        document["hamburger"].bind("click", toggle_menu)
+        document["match-button"].bind("click", match_user_to_team)
+        setup_menu()
 
     </script>
 </body>
