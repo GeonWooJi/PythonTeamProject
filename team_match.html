@@ -126,6 +126,13 @@
         button:hover {
             background-color: #333;
         }
+
+        #team-result {
+            padding: 15px;
+            border-radius: 6px;
+            background-color: #f9f9f9;
+            border: 1px solid #ddd;
+        }
     </style>
 </head>
 <body onload="brython()">
@@ -150,16 +157,14 @@
     <!-- FORM -->
     <div class="container">
         <h2>내 성격과 유사한 팀 찾기</h2>
-        <button id="generate-team">랜덤 팀 생성</button>
-        <div id="team-result" style="margin-top:20px;"></div>
+        <button id="match-button">랜덤 팀 배정</button>
+        <div id="team-result" style="margin-top:20px; display:none;"></div>
     </div>
 
-    </div>
     <script type="text/python">
-        from browser import document, html, alert, window
-        import json
+        from browser import window, alert, document, html
         import random
-        from itertools import combinations
+        import json
 
         def setup_menu():
             menu = document["menu"]
@@ -190,75 +195,161 @@
                     on_logout(None)
 
         def on_logout(ev):
+            if ev:
+                ev.preventDefault()
             window.sessionStorage.removeItem("userInfo")
             window.location.href = "index.html"  # 메인 페이지로 이동
-
-        setup_menu()
 
         def toggle_menu(event):
             menu = document["menu"]
             menu.classList.toggle("show")
 
-        document["hamburger"].bind("click", toggle_menu)
+        def get_user_info():
+            user_info_str = window.sessionStorage.getItem("userInfo")
+            if user_info_str:
+                try:
+                    return json.loads(user_info_str)
+                except:
+                    return {}
+            return {}
 
-        # MBTI 궁합 점수 예시 (일부만 표시, 실제론 전체 16x16 쌍을 채워야 함)
-        mbti_compat = {
-            "ENFP": {"INFJ": "최고", "INTP": "좋음", "ESTJ": "보통", "ISTJ": "최악"},
-            "INFJ": {"ENFP": "최고", "ENTP": "좋음", "ESTP": "보통", "ISFP": "나쁨"},
-            "INTP": {"ENFP": "좋음", "INFJ": "좋음", "ISFJ": "보통", "ESFP": "최악"},
-            "ESTJ": {"ISFJ": "최고", "ENFP": "보통"},
-            # 생략된 나머지는 실제 데이터로 채우세요
+        def get_team_list():
+            try:
+                cookies = window.document.cookie.split("; ")
+                for cookie in cookies:
+                    if cookie.startswith("team-list="):
+                        value = cookie[len("team-list="):]
+                        decoded = window.decodeURIComponent(value)
+                        return json.loads(decoded)
+            except:
+                pass
+            return []
+
+        def save_team_list(team_list):
+            try:
+                new_cookie = json.dumps(team_list)
+                window.document.cookie = f"team-list={window.encodeURIComponent(new_cookie)}; path=/;"
+            except Exception as e:
+                console.log(f"팀 리스트 저장 실패: {e}")
+
+        # MBTI 궁합 정보 (완전한 매핑)
+        mbti_compatibility = {
+            "ENFP": {"최고": ["INFJ", "INTJ"], "잘 맞는": ["INFP", "ENFJ", "ENTP", "ENFP"]},
+            "INFP": {"최고": ["ENFJ", "ENTJ"], "잘 맞는": ["INFJ", "ENFP", "INFP", "ISFP"]},
+            "ENFJ": {"최고": ["INFP", "ISFP"], "잘 맞는": ["ENFP", "INFJ", "ENFJ", "ESFJ"]},
+            "INFJ": {"최고": ["ENFP", "ENTP"], "잘 맞는": ["INFP", "ENFJ", "INFJ", "INTJ"]},
+            "ENTP": {"최고": ["INFJ", "INTJ"], "잘 맞는": ["ENFP", "INTP", "ENTP", "ENTJ"]},
+            "INTP": {"최고": ["ENTJ", "ESTJ"], "잘 맞는": ["ENTP", "INTJ", "INTP", "ISTP"]},
+            "ENTJ": {"최고": ["INFP", "INTP"], "잘 맞는": ["ENTP", "INTJ", "ENTJ", "ESTJ"]},
+            "INTJ": {"최고": ["ENFP", "ENTP"], "잘 맞는": ["INFJ", "ENTJ", "INTJ", "ISTJ"]},
+            "ESFP": {"최고": ["ISFJ", "ISTJ"], "잘 맞는": ["ESTP", "ESFJ", "ESFP", "ISFP"]},
+            "ISFP": {"최고": ["ENFJ", "ESFJ"], "잘 맞는": ["INFP", "ESFP", "ISFP", "ISTP"]},
+            "ESFJ": {"최고": ["ISFP", "ISTP"], "잘 맞는": ["ENFJ", "ESFP", "ESFJ", "ISFJ"]},
+            "ISFJ": {"최고": ["ESFP", "ESTP"], "잘 맞는": ["ESFJ", "ISFP", "ISFJ", "ISTJ"]},
+            "ESTP": {"최고": ["ISFJ", "ISTJ"], "잘 맞는": ["ESFP", "ESTP", "ISTP", "ESTP"]},
+            "ISTP": {"최고": ["ESFJ", "ESTJ"], "잘 맞는": ["ESTP", "ISFP", "ISTP", "INTP"]},
+            "ESTJ": {"최고": ["INTP", "ISTP"], "잘 맞는": ["ENTJ", "ESTP", "ESTJ", "ISTJ"]},
+            "ISTJ": {"최고": ["ESFP", "ESTP"], "잘 맞는": ["ESTJ", "ISFJ", "ISTJ", "INTJ"]}
         }
 
-        score_map = {
-            "최고": 5,
-            "좋음": 4,
-            "보통": 3,
-            "나쁨": 2,
-            "최악": 1
-        }
+        def is_compatible(user_mbti, team_mbti_list):
+            if user_mbti not in mbti_compatibility:
+                return False
 
-        def get_score(m1, m2):
-            return score_map.get(mbti_compat.get(m1, {}).get(m2, "보통"), 3)
+            if not team_mbti_list:
+                return True
 
-        def is_valid_team(team):
-            for i in range(len(team)):
-                for j in range(i + 1, len(team)):
-                    score = get_score(team[i]["mbti"], team[j]["mbti"])
-                    if score < 4:
-                        return False
+            best = mbti_compatibility[user_mbti]["최고"]
+            good = mbti_compatibility[user_mbti]["잘 맞는"]
+            
+            # 모든 팀 멤버와 궁합이 맞아야 함 (최고 또는 잘 맞는 관계)
+            for mbti in team_mbti_list:
+                if mbti not in best and mbti not in good:
+                    return False
+            
             return True
 
-        def generate_team(users, team_size=4):
-            random.shuffle(users)
-            candidates = list(combinations(users, team_size))
-            random.shuffle(candidates)
-            for team in candidates:
-                if is_valid_team(team):
-                    return team
-            return None
-
-        def on_generate_team(ev):
-            user_list_str = window.sessionStorage.getItem("allUsers")
-            if not user_list_str:
-                alert("사용자 정보가 없습니다. 먼저 회원가입을 진행해주세요.")
-                return
-            try:
-                users = json.loads(user_list_str)
-            except:
-                alert("사용자 정보 파싱 오류.")
-                return
-
-            team = generate_team(users)
+        def display_team_result(team_info, user_info):
             result_div = document["team-result"]
-            result_div.clear()
-            if team:
-                for member in team:
-                    result_div <= html.DIV(f"{member['name']} ({member['mbti']})")
-            else:
-                result_div <= html.DIV("조건에 맞는 팀을 구성할 수 없습니다.", style={"color": "red"})
+            result_div.style.display = "block"
+            
+            team_name = team_info.get("teamName", "알 수 없는 팀")
+            members = team_info.get("userInfo", {})
+            
+            html_content = f"<h3>🎉 {team_name}에 배정되었습니다!</h3>"
+            html_content += "<h4>팀원 정보:</h4><ul>"
+            
+            # 기존 팀원들
+            for name, info in members.items():
+                mbti = info.get("mbti", "N/A")
+                html_content += f"<li>{name} ({mbti})</li>"
+            
+            # 본인 추가
+            user_name = user_info.get("name", "나")
+            user_mbti = user_info.get("mbti", "N/A")
+            html_content += f"<li><strong>{user_name} ({user_mbti}) - 새로 합류!</strong></li>"
+            
+            html_content += "</ul>"
+            result_div.innerHTML = html_content
 
-        document["generate-team"].bind("click", on_generate_team)
+        def match_user_to_team():
+            user = get_user_info()
+            user_mbti = user.get("mbti")
+            
+            # 사용자 정보 확인
+            if not user:
+                alert("로그인이 필요합니다.")
+                return
+                
+            if not user_mbti:
+                alert("사용자 MBTI 정보가 없습니다. 프로필을 완성해주세요.")
+                return
+
+            team_list = get_team_list()
+            
+            if not team_list:
+                alert("현재 생성된 팀이 없습니다.")
+                return
+
+            compatible_teams = []
+
+            for team in team_list:
+                members = team.get("userInfo", {})
+                
+                # 이미 팀에 속해있는지 확인
+                if user.get("name") in members:
+                    alert(f"이미 {team.get('teamName', '해당 팀')}에 속해있습니다!")
+                    return
+                
+                member_mbtis = [m.get("mbti") for m in members.values() if m.get("mbti")]
+                
+                if is_compatible(user_mbti, member_mbtis):
+                    compatible_teams.append(team)
+
+            if not compatible_teams:
+                alert("현재 궁합이 맞는 팀이 없습니다. 나중에 다시 시도해보세요.")
+                return
+
+            # 랜덤으로 팀 선택
+            selected_team = random.choice(compatible_teams)
+            
+            # 사용자를 팀에 추가
+            selected_team["userInfo"][user["name"]] = user
+
+            # 팀 리스트 저장
+            save_team_list(team_list)
+
+            # 결과 표시
+            display_team_result(selected_team, user)
+
+        # 이벤트 바인딩
+        def init():
+            setup_menu()
+            document["hamburger"].bind("click", toggle_menu)
+            document["match-button"].bind("click", lambda ev: match_user_to_team())
+
+        # 초기화 실행
+        init()
 
     </script>
 </body>
