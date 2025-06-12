@@ -168,7 +168,7 @@
         </form>
     </div>
     <script type="text/python">
-        from browser import document, alert, timer, window, html
+        from browser import document, alert, timer, window, html, ajax
         import json
 
         def setup_menu():
@@ -211,20 +211,6 @@
 
         document["hamburger"].bind("click", toggle_menu)
 
-        def get_user_info_array():
-            cookies = document.cookie
-            for cookie in cookies.split(";"):
-                if cookie.strip().startswith("user-info="):
-                    value = cookie.split("=", 1)[1]
-                    try:
-                        return json.loads(value)
-                    except:
-                        return []
-            return []
-
-        def set_user_info_array(info_array):
-            cookie_string = f"user-info={json.dumps(info_array)}; path=/"
-            document.cookie = cookie_string
 
         def validate_student_id(sid):
             return sid.startswith("202") and len(sid) == 9 and sid.isdigit()
@@ -263,13 +249,26 @@
                 "mbti": "null"
             }
 
-            user_info_array = get_user_info_array()
-            user_info_array.append(new_user)
-            set_user_info_array(user_info_array)
+            user = {
+                "studentNumber": sid,
+                "name": name,
+                "lesson": major,
+                "kakaoProfileLink": kakao,
+                "mbti": "null"
+            }
 
-            alert("회원가입이 완료되었습니다. \n로그인 후 서비스를 이용해주시길 바랍니다.");
-            window.location.href = "login.html"
+            req = ajax.ajax()
+            req.bind("complete", on_success)
+            req.open("POST", "http://3.106.164.28:5000/add_user", True)  # EC2 IP 수정
+            req.set_header("Content-Type", "application/json")
+            req.send(json.dumps(user))
 
+        def on_success(req):
+            # 서버 응답이 200번대일 때 실행
+            # req.text 또는 req.json()으로 서버 응답 내용을 확인할 수 있습니다.
+            window.alert("회원가입이 완료되었습니다. \n로그인 후 서비스를 이용해주시길 바랍니다.")
+            window.location.href = "index.html"
+    
         def setup():
             try:
                 form = document["signup-form"]

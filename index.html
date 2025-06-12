@@ -283,7 +283,7 @@
 
     <!-- BRYTHON SCRIPT -->
     <script type="text/python">
-        from browser import document, window, html
+        from browser import document, window, html, ajax
         import json
         import random
 
@@ -377,22 +377,17 @@
             "https://lh3.googleusercontent.com/proxy/J4Ly4jjnTzGj24-vIxym4l729OwQd0jDR66DP4Jh_Qquju70-B5N24Zebl9_TuVuTy9ZJYKkM0Tvtow7Q7jexSuEcJFGFmf8vcYxxvumMov4jhGAkVFJfpDv6NdP"
         ]
 
-        def get_user_info_array():
-            cookies = document.cookie
-            for cookie in cookies.split(";"):
-                if cookie.strip().startswith("user-info="):
-                    try:
-                        return json.loads(cookie.split("=", 1)[1])
-                    except:
-                        return []
-            return []
-
-        def render_party_boxes():
+        # render_party_boxes 함수를 수정하여 사용자 데이터 리스트를 인자로 받도록 합니다.
+        def render_party_boxes(users_list):
+            """
+            사용자 정보 리스트를 받아 파티 박스를 렌더링하는 함수
+            """
             container = document["party-container"]
-            container.clear()
-            users = get_user_info_array()
+            container.clear() # 기존 박스 모두 제거
 
-            for user in users:
+            # 인자로 받은 users_list를 사용합니다.
+            for user in users_list:
+                # user 객체에서 필요한 정보 가져오기 (서버 응답 필드명과 일치해야 함)
                 student_num = user.get("studentNumber", "")
                 mbti = user.get("mbti", "")
                 year = student_num[2:4] if len(student_num) >= 5 else "??"
@@ -417,7 +412,80 @@
                 box <= text
                 container <= box
 
-        render_party_boxes()
+
+        # --- 서버에서 모든 사용자 정보를 가져와 렌더링하는 함수 ---
+        def fetch_users_and_render():
+            """
+            서버 API를 호출하여 모든 사용자 정보를 가져온 후
+            render_party_boxes 함수를 호출하는 함수
+            """
+            req = ajax.ajax()
+            req.bind("complete", lambda ev: on_fetch_users_complete(req))
+
+            # Flask 앱의 모든 사용자 정보 조회 엔드포인트 URL 설정
+            backend_url = "http://3.106.164.28:5000/get_all_users" # 실제 EC2 퍼블릭 IP 또는 Elastic IP로 변경
+
+            # GET 요청 설정
+            req.open("GET", backend_url, True)
+
+            # 요청 전송
+            req.send()
+
+            print("서버에 모든 사용자 정보 요청 보냄")
+
+            # 로딩 표시 (선택 사항)
+            container = document["party-container"]
+            container.text = "사용자 정보 로딩 중..."
+
+
+        def on_fetch_users_complete(req):
+            """
+            모든 사용자 정보 조회 API 요청 완료 후 호출되는 콜백 함수
+            """
+            container = document["party-container"] # 메시지 표시를 위해 다시 가져옴
+            container.clear() # 로딩 메시지 제거
+
+            status_code = req.status
+
+            if status_code == 200:
+                try:
+                    response_data = req.json
+                    if response_data and isinstance(response_data, dict) and response_data.get("status") == "ok":
+                        # 서버에서 사용자 정보 리스트를 성공적으로 받음
+                        users_list = response_data.get("data", []) # 사용자 정보 딕셔너리들의 리스트
+
+                        # render_party_boxes 함수에 가져온 사용자 리스트 전달
+                        render_party_boxes(users_list)
+
+                        if not users_list:
+                            container.text = "표시할 사용자 정보가 없습니다."
+
+                    else:
+                        error_message = response_data.get("message", f"사용자 정보 가져오기 실패 (상태 코드: {status_code})") if response_data and isinstance(response_data, dict) else f"사용자 정보 가져오기 실패 (상태 코드: {status_code})"
+                        container.text = f"사용자 정보 로딩 실패: {error_message}"
+                        print(f"서버에서 사용자 정보 가져오기 실패: {error_message}")
+
+                except Exception as e:
+                    container.text = f"사용자 정보 응답 처리 중 오류 발생: {e}"
+                    print(f"Error processing response: {e}\nResponse text: {req.text}")
+
+            else:
+                try:
+                    error_response = req.json
+                    error_message = error_response.get("message", f"사용자 정보 요청 중 오류 발생! 상태 코드: {status_code}") if error_response and isinstance(error_response, dict) else f"사용자 정보 요청 중 오류 발생! 상태 코드: {status_code}"
+                    container.text = f"사용자 정보 로딩 실패: {error_message}"
+                    print(f"사용자 정보 요청 중 오류 발생: {error_message}")
+                except Exception:
+                    container.text = f"사용자 정보 로딩 중 알 수 없는 오류 발생! 상태 코드: {status_code}"
+                    print(f"Unknown error during user fetch request. Status: {status_code}, Response text: {req.text}")
+
+
+        # 페이지 로드 시 또는 파티 박스를 표시해야 할 때 이 함수를 호출합니다.
+        # 예:
+        # window.bind("load", fetch_users_and_render)
+        # 또는 HTML <script type="text/python"> 블록 마지막에 호출
+        fetch_users_and_render()
+
         def setup_menu():
             menu = document["menu"]
             menu.clear()

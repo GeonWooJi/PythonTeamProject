@@ -183,7 +183,7 @@
 
     <!-- Brython 코드 -->
     <script type="text/python">
-        from browser import document, alert, timer, window, html
+        from browser import document, alert, timer, window, html, ajax
         import json
 
         def setup_menu():
@@ -240,26 +240,59 @@
         def on_login_click(ev):
             input_sid = document["student-id"].value.strip()
             input_name = document["name"].value.strip()
+            login_message_element = document["login-message"] # 메시지를 표시할 HTML 요소
+
+            # 메시지 초기화
+            login_message_element.text = ""
 
             if not input_sid or not input_name:
-                document["login-message"].text = "학번과 이름을 모두 입력하세요."
+                login_message_element.text = "학번과 이름을 모두 입력하세요."
                 return
 
-            user_info_array = get_user_info_array()
-            matched_user = None
+            # AJAX 요청 객체 생성
+            req = ajax.ajax()
 
-            for user in user_info_array:
-                if user["studentNumber"] == input_sid and user["name"] == input_name:
-                    matched_user = user
-                    break
+            # 요청 완료 시 실행될 콜백 함수 바인딩
+            # 성공/실패와 관계없이 요청이 완료되면 이 함수가 호출됩니다.
+            req.bind("complete", lambda ev: on_login_complete(req, login_message_element))
 
-            if matched_user:
-                # SessionStorage 에 저장
-                window.sessionStorage.setItem("userInfo", json.dumps(matched_user))
-                alert("로그인 성공 !\n메인페이지로 이동합니다.");
-                window.location.href = "index.html"
-            else:
-                document["login-message"].text = "일치하는 회원 정보가 없습니다."
+            # Flask 앱의 로그인 엔드포인트 URL 설정
+            # "http://YOUR_EC2_PUBLIC_IP:5000/login" 부분을 실제 EC2 퍼블릭 IP 또는 Elastic IP로 변경하세요.
+            backend_url = "http://3.106.164.28:5000/login"
+
+            # POST 요청 설정
+            req.open("POST", backend_url, True)
+
+            # 요청 본문 데이터 준비 (URL-encoded form data 형식)
+            # Flask 서버가 request.form으로 받도록 설정했기 때문에 이 형식을 사용합니다.
+            form_data = f"studentNumber={input_sid}&name={input_name}"
+
+            # 요청 헤더 설정 (폼 데이터 전송 시 Content-Type은 보통 자동으로 설정되지만 명시적으로 지정해도 됩니다)
+            req.set_header("Content-Type", "application/x-www-form-urlencoded") # Brython ajax는 기본적으로 폼 데이터 전송 시 이 헤더를 설정합니다.
+
+            # 요청 전송
+            req.send(form_data)
+
+            # 로딩 메시지 표시 (선택 사항)
+            login_message_element.text = "로그인 중..."
+
+
+        def on_login_complete(req, login_message_element):
+            response_data = req.json
+            # 서버에서 받은 사용자 정보를 가져옴 (이제 모든 정보가 포함됨)
+            matched_user = response_data.get("user", {})
+
+            # SessionStorage 에 저장
+            # 모든 정보가 담긴 matched_user 딕셔너리를 JSON 문자열로 변환하여 저장
+            window.sessionStorage.setItem("userInfo", json.dumps(matched_user))
+
+            login_message_element.text = ""
+            # 저장된 정보 확인 예시 (개발자 도구 콘솔에서 확인 가능)
+            print("SessionStorage에 저장된 사용자 정보:", window.sessionStorage.getItem("userInfo"))
+
+            window.alert("로그인 성공 !\n메인페이지로 이동합니다.");
+            window.location.href = "index.html" # 메인 페이지로 이동
+
 
         # 버튼에 이벤트 바인딩
         document["login-button"].bind("click", on_login_click)
