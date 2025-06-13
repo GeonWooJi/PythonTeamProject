@@ -163,6 +163,9 @@
 
             <label for="kakao">1대1 카카오톡 오픈 프로필 주소</label>
             <input type="url" id="kakao" name="kakao" placeholder="https://open.kakao.com/..." required>
+            
+            <label for="major">MBTI(선택)</label>
+            <input type="text" id="mbti" name="mbti">
 
             <button type="submit">가입하기</button>
         </form>
@@ -221,6 +224,9 @@
         def validate_kakao_link(link):
             return link.startswith("https://")
 
+        def validate_mbti(mbti):
+            return len(mbti) == 4 and mbti.isupper()
+
         def on_submit(ev):
             ev.preventDefault()
 
@@ -228,6 +234,8 @@
             name = document["name"].value
             major = document["major"].value
             kakao = document["kakao"].value
+            mbti = document["mbti"].value.strip()
+
 
             if not validate_student_id(sid):
                 alert("학번은 '202'로 시작하고 총 9자리여야 합니다.")
@@ -235,6 +243,10 @@
 
             if not validate_name(name):
                 alert("이름은 2자 이상 5자 이하이어야 합니다.")
+                return
+                
+            if mbti and not validate_mbti(mbti):
+                alert("MBTI는 대문자 영어 4글자이어야 합니다다")
                 return
 
             if not validate_kakao_link(kakao):
@@ -246,7 +258,7 @@
                 "name": name,
                 "lesson": major,
                 "kakaoProfileLink": kakao,
-                "mbti": "null"
+                "mbti": mbti
             }
 
             user = {
@@ -254,7 +266,7 @@
                 "name": name,
                 "lesson": major,
                 "kakaoProfileLink": kakao,
-                "mbti": "null"
+                "mbti": mbti
             }
 
             req = ajax.ajax()
